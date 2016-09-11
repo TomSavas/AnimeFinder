@@ -5,4 +5,7 @@ try:
 	for i in animeInfo:
 		print(i)
 except:
-	print('CFscrape was unable to bypass cloudflare...')
+	print('Something went wrong... (Best error msg ever, I know <3)')
+
+
+

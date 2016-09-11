@@ -28,7 +28,7 @@ def getElementInfo(html, count, threads, scraper):
 		reg = regex.search(r'\"aAnime\".href(?:[^\>])+>\s*(?P<AnimeName>[^\<]+)', html)
 		info['AnimeName'] = reg.group('AnimeName') 
 	except:
-		return {}
+		return {}, count
 
 	try:
 		reg = regex.search(r'(?P<State>(Completed)|(Not\syet\saired)|(Episode\s\d+))', html)
