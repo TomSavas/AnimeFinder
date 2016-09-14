@@ -9,37 +9,40 @@ class SearchThread(threading.Thread):
 		self.threadID = threadID
 		self.scraper = scraper
 		self.html = html
-		self.episodeCount = ''
+		self.episodeCount = 0
 
 	def run(self):
-		try:
-			self.episodeCount = getEpisodeCount(self.html, self.scraper)
-		except:
-			print('CFscrape was unable to bypass cloudflare...')
-
+		self.episodeCount = getEpisodeCount(self.html, self.scraper)
+		
 def getAnimeHtml(html, scraper):
 	url = 'http://kissanime.to'
 	try:
-		reg = regex.search(r'"aAnime"\shref="(?P<Link>/Anime/[^"]+)', html)
+		reg = regex.search(r'"aAnime"\shref="(?P<Link>/Anime/[^"]+)\"\>(?P<AnimeName>[^<]+)', html)
 		url += reg.group('Link')
+		animeName = reg.group('AnimeName')
 	except:
-		return ''
+		return '', '', ''
 
 	html = HtmlParsing.getHtml(url, scraper)
-	return html, url
+	return html, url, animeName
 
 def getEpisodeCount(html, scraper):
-	html, url = getAnimeHtml(html, scraper)
-
+	html, url, animeName = getAnimeHtml(html, scraper)
 	try:
-		reg = regex.search(r'Episode\s(?P<EpisodeCount>\d+)', html)
-		episodeCount = reg.group('EpisodeCount')
+		html = regex.split(r'\<table\sclass\=\"listing\"\>', html)
+		html = regex.split(r'\<\/table\>', html[1])[0]
+		regexQuery = '<a\s+?href.*?()'
+		reg = regex.findall(regexQuery, html)
+		episodeCount = len(reg)
 	except:
 		print('failed regex @', url)
 		log = open('log', 'a')
-		log.write('failed regex @' + url + ':\n' + html + '\n\n\n\n\n\n\n')
+		log.write('failed regex @' + url + ':\n')
+		for i in html:
+			log.write(i)
+		log.write('\n\n\n\n\n\n\n')	
 		log.close()
-		episodeCount = 'ERROR'
+		episodeCount = -1
 
 	return episodeCount
 

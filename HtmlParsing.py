@@ -26,9 +26,9 @@ def getElementInfo(html, count, threads, scraper):
 	
 	try:
 		reg = regex.search(r'\"aAnime\".href(?:[^\>])+>\s*(?P<AnimeName>[^\<]+)', html)
-		info['AnimeName'] = reg.group('AnimeName') 
+		info['AnimeName'] = reg.group('AnimeName')
 	except:
-		return {}, count
+		return None, count
 
 	try:
 		reg = regex.search(r'(?P<State>(Completed)|(Not\syet\saired)|(Episode\s\d+))', html)
@@ -46,7 +46,7 @@ def getElementInfo(html, count, threads, scraper):
 		try:
 			reg = regex.search(r'(Episode\s\d+)', html)
 			reg = regex.search(r'\d+', reg.group(0))
-			info['EpisodeCount'] = reg.group(0)
+			info['EpisodeCount'] = int(reg.group(0))
 			searchThread = None
 		except:
 			pass
@@ -69,6 +69,7 @@ def getAnimeInfo():
 	count = 0
 	for i in range(len(html)):
 		info, count = getElementInfo(html[i], count, threads, scraper)
+		if info is None : continue
 		infoList.append(info)
 		
 	for i in threads.keys():
@@ -83,4 +84,18 @@ def getAnimeInfo():
 	for i in threads.keys():
 		threads[i].join()
 
-	return infoList
+	totalEpisodeCount = countEpisodes(infoList, False)
+	totalWatchedEpisodeCount = countEpisodes(infoList)
+
+	return infoList, totalEpisodeCount, totalWatchedEpisodeCount
+
+def countEpisodes(infoList, Watched = True):
+	totalEpisodeCount = 0
+	for i in infoList:
+		if Watched:
+			if i['IsWatched']:
+				totalEpisodeCount += i['EpisodeCount']
+		else:
+			totalEpisodeCount += i['EpisodeCount']
+
+	return totalEpisodeCount
