@@ -1,48 +1,60 @@
-import threading 
-import cfscrape
-import re as regex
-import HtmlParsing
+from Utils import *
 
 class SearchThread(threading.Thread):
-	def __init__(self, threadID, scraper, html):
+	def __init__(self, html):
 		threading.Thread.__init__(self)
-		self.threadID = threadID
-		self.scraper = scraper
 		self.html = html
 		self.episodeCount = 0
+		self.synonyms = []
 
 	def run(self):
-		self.episodeCount = getEpisodeCount(self.html, self.scraper)
+		self.episodeCount = self.GetEpisodeCount()
+		self.synonyms = self.GetAnimeSynonyms()
 		
-def getAnimeHtml(html, scraper):
-	url = 'http://kissanime.to'
-	try:
-		reg = regex.search(r'"aAnime"\shref="(?P<Link>/Anime/[^"]+)\"\>(?P<AnimeName>[^<]+)', html)
-		url += reg.group('Link')
-		animeName = reg.group('AnimeName')
-	except:
-		return '', '', ''
+	def GetAnimeHtml(self):
+		url = 'http://kissanime.to'
+		try:
+			regexResult = regex.search(r'"aAnime"\shref="(?P<Link>/Anime/[^"]+)\"\>(?P<AnimeName>[^<]+)', self.html)
+			url += regexResult.group('Link')
+		except Exception as exception:
+			Debug.Log(traceback.format_exc())
+			return None
 
-	html = HtmlParsing.getHtml(url, scraper)
-	return html, url, animeName
+		html = GetHtml(url)
+		return html
 
-def getEpisodeCount(html, scraper):
-	html, url, animeName = getAnimeHtml(html, scraper)
-	try:
-		html = regex.split(r'\<table\sclass\=\"listing\"\>', html)
-		html = regex.split(r'\<\/table\>', html[1])[0]
-		regexQuery = '<a\s+?href.*?()'
-		reg = regex.findall(regexQuery, html)
-		episodeCount = len(reg)
-	except:
-		print('failed regex @', url)
-		log = open('log', 'a')
-		log.write('failed regex @' + url + ':\n')
-		for i in html:
-			log.write(i)
-		log.write('\n\n\n\n\n\n\n')	
-		log.close()
-		episodeCount = -1
+	def GetEpisodeCount(self):
+		html = self.GetAnimeHtml()
+		if html is None:
+			self.episodeCount = 0
+			return self.episodeCount
 
-	return episodeCount
+		try:
+			html = regex.split(r'\<table\sclass\=\"listing\"\>', html)
+			if len(html) <= 1:
+				self.episodeCount = 0
+				return 0
 
+			html = regex.split(r'\<\/table\>', html[1])[0]
+			regexQuery = '<a\s+?href.*?()'
+			regexResult = regex.findall(regexQuery, html)
+			self.episodeCount = len(regexResult)
+		except Exception as exception:
+			Debug.Log(traceback.format_exc(), html)
+			self.episodeCount = 0
+
+		return self.episodeCount
+	def GetAnimeSynonyms(self):
+		html = self.GetAnimeHtml()
+
+		synonyms = []
+		try:
+			html = regex.split(r'<p>\s+?<span', html)[1]
+			synonyms = regex.findall(r'(?:title.+?">([^<]+))', html)
+		except Exception as exception:
+			Debug.Log(traceback.format_exc(), html)
+
+		for synonym in synonyms:
+			if not IsHexInString(synonym):
+				self.synonyms.append(synonym.replace('\\', ''))
+		return self.synonyms
