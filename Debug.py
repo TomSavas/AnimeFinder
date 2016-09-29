@@ -10,7 +10,7 @@ class Debug():
 		if Debug.logFile == '':
 			open('log', 'w').close()
 			Debug.logFile = open('log', 'a')
-			Debug.logFile.write(str('\n -----' + str(datetime.now()) + '-----\n'))
+			Debug.logFile.write(str('\n   -----' + str(datetime.now()) + '-----\n'))
 	@staticmethod
 	def CloseLogFile():
 		if Debug.logFile != '':
