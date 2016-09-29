@@ -91,3 +91,9 @@ class KissParser():
 				episodeCount += animeEntity.episodeCount
 		Debug.Log('You have watched ', episodeCount, ' which @25min rounds to ', str(int(episodeCount*25/60)), ' h or ', str(int(episodeCount*25/60/24)), 'days of watch time.')
 
+	def CountTimeSpent(self):
+		episodeCount = 0
+		for animeEntity in self.animeEntities:
+			if animeEntity.userState.value == 2:
+				episodeCount += animeEntity.episodeCount
+		Debug.Log('You have watched ', episodeCount, ' which @25min rounds to ', str(int(episodeCount*25/60)), ' h or ', str(int(episodeCount*25/60/24)), 'days of watch time.')

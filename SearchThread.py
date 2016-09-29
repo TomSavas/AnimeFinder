@@ -1,6 +1,7 @@
 from Utils import *
 
 class SearchThread(threading.Thread):
+
 	def __init__(self, html):
 		threading.Thread.__init__(self)
 		self.html = html
@@ -20,7 +21,7 @@ class SearchThread(threading.Thread):
 			Debug.Log(traceback.format_exc())
 			return None
 
-		html = GetHtml(url)
+		html = ScrapeHtml(url)
 		return html
 
 	def GetEpisodeCount(self):
