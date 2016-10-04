@@ -42,7 +42,7 @@ class DB():
 	def GetKissAnimeEntities(self, animeName=None, animeId=None):
 		animeEntities = []
 		
-		if animeName is None and animeId is None and origin is None:
+		if animeName is None and animeId is None:
 			Debug.Log('[DB] animeName = ', animeName, ' animeId = ', animeId, ' are unsupported parameters')
 			return None
 

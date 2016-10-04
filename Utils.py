@@ -1,7 +1,6 @@
 import cfscrape, time, traceback, threading, requests, base64
 import re as regex
 from UserState import *
-from Origin import *
 from AnimeEntities import *
 from Debug import *
 from DB import *
@@ -16,18 +15,26 @@ def GetMalCredentialsFromUser():
 	password = input('Input your MAL password: ')
 	return name, password
 
-def GetScraper():
+def GetGlobalScraper():
 	global scraper
 	if scraper is None:
 		scraper = cfscrape.create_scraper()
 	return scraper 
+def GetScraper():
+	return cfscrape.create_scraper()
+
 def ScrapeHtml(url, scraper=None):
 	try:
-		html = str(GetScraper().get(url).content)
+		if scraper is None:
+			html = str(GetGlobalScraper().get(url).content)
+		else:
+			html = str(scraper.get(url).content)			
 	except Exception as exception:
 		Debug.Log('CFscrape screwed up... \n', traceback.format_exc())
-	html = html.replace('\r', '').replace('\n', '').replace('\\r', '').replace('\\n', '')
+	html = RemoveHtmlTrash(html)
 	return html
+def RemoveHtmlTrash(html):
+	return html.replace('\r', '').replace('\n', '').replace('\\r', '').replace('\\n', '')
 def GetRequest(url, headers=None):
 	if headers is not None:
 		return requests.get(url, headers=headers).text

@@ -1,6 +1,5 @@
 from Debug import *
 from UserState import *
-from Origin import *
 
 class AnimeEntity:
 	def __init__(self, animeName=None, synonyms=None, episodeCount=None, userState=None, animeId=None):
