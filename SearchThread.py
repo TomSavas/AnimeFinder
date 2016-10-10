@@ -2,11 +2,12 @@ from Utils import *
 
 class SearchThread(threading.Thread):
 
-	def __init__(self, html):
+	def __init__(self, html, crawlerRegexQuery=None):
 		threading.Thread.__init__(self)
 		self.html = html
 		self.episodeCount = 0
 		self.synonyms = []
+		self.crawlerRegexQuery = crawlerRegexQuery
 
 	def run(self):
 		self.episodeCount = self.GetEpisodeCount()
@@ -15,13 +16,18 @@ class SearchThread(threading.Thread):
 	def GetAnimeHtml(self):
 		url = 'http://kissanime.to'
 		try:
-			regexResult = regex.search(r'"aAnime"\shref="(?P<Link>/Anime/[^"]+)\"\>(?P<AnimeName>[^<]+)', self.html)
+			if self.crawlerRegexQuery is None:
+				regexResult = regex.search(r'"aAnime"\shref="(?P<Link>/Anime/[^"]+)\"\>(?P<AnimeName>[^<]+)', self.html)
+			else:
+				regexResult = regex.search(self.crawlerRegexQuery, self.html)
+
 			url += regexResult.group('Link')
 		except Exception as exception:
 			Debug.Log(traceback.format_exc())
 			return None
 
 		html = ScrapeHtml(url)
+		html = RemoveHtmlTrash(str(html.content)) if html is not None else ''  
 		return html
 
 	def GetEpisodeCount(self):
@@ -50,7 +56,11 @@ class SearchThread(threading.Thread):
 
 		synonyms = []
 		try:
-			html = regex.split(r'<p>\s+?<span', html)[1]
+			html = regex.split(r'<p>\s+?<span', html)
+			if len(html) < 2:	
+				return synonyms
+			html = html[1] 
+			html = regex.split(r'Genres', html)[0]
 			synonyms = regex.findall(r'(?:title.+?">([^<]+))', html)
 		except Exception as exception:
 			Debug.Log(traceback.format_exc(), html)

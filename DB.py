@@ -16,7 +16,7 @@ class DB():
 		self.cursor.execute('SELECT name FROM sqlite_master WHERE type = "table"')
 		if self.cursor.fetchone() is None:
 			self.cursor.execute("CREATE TABLE KissAnime(AnimeName TEXT PRIMARY KEY, Synonyms TEXT, EpisodeCount INT, UserState TEXT, AnimeID INT)")
-			self.cursor.execute("CREATE TABLE MalAnime(AnimeName TEXT, Synonyms TEXT, EpisodeCount INT, UserState TEXT, AnimeID INT PRIMARY KEY)")
+			# self.cursor.execute("CREATE TABLE MalAnime(AnimeName TEXT, Synonyms TEXT, EpisodeCount INT, UserState TEXT, AnimeID INT PRIMARY KEY)")
 			Debug.Log('Database created @ /anime.db')
 		else:
 			Debug.Log('Loaded existing database from /anime.db')
@@ -39,6 +39,9 @@ class DB():
 	def AddMalAnimeEntity(self, animeEntity):
 		self.cursor.execute('INSERT INTO MalAnime VALUES(?, ?, ?, ?, ?)', self.ParseToTuple(animeEntity))
 
+	def UpdateKissAnimeEntity(self, animeEntity):
+		self.cursor.execute('UPDATE KissAnime SET EpisodeCount = ?, UserState = ?, AnimeID = ? WHERE AnimeName LIKE ?', self.ParseToTupleForUpdate(animeEntity))
+
 	def GetKissAnimeEntities(self, animeName=None, animeId=None):
 		animeEntities = []
 		
@@ -49,14 +52,9 @@ class DB():
 		self.cursor.execute('SELECT * FROM KissAnime WHERE AnimeName LIKE ? AND AnimeID LIKE ? OR AnimeName LIKE ? AND AnimeID IS NULL', (animeName if animeName is not None else '%', animeId  if animeId is not None else '%', animeName if animeName is not None else '%'))			
 		values = self.cursor.fetchall()
 
-		Debug.Log('Length of values ', str(len(values)))
-
 		if len(values) == 0:
 			return None
-
-		for value in values:
-			Debug.Log(value)
-
+			
 		for value in values:
 			animeEntity = self.ParseToAnimeEntity(value)
 			animeEntities.append(animeEntity)
@@ -101,7 +99,7 @@ class DB():
 		return self.GetBestMatchingMalAnime(animeEntity, animeEntities)
 
 	def ParseToAnimeEntity(self, values):
-		animeEntity = AnimeEntity(values[0], list(filter(lambda x: x != '', values[1].split(';'))), values[2], IdentifyUserState(values[3]), values[4])
+		animeEntity = AnimeEntity(values[0] if values[0] is not None else '', list(filter(lambda x: x != '', values[1].split(';'))) if values[1] is not None else [], values[2] if values[2] is not None else 0, IdentifyUserState(values[3]), values[4])
 		return animeEntity
 	def ParseToTuple(self, animeEntity):
 		values = ()
@@ -110,6 +108,13 @@ class DB():
 		values += (animeEntity.episodeCount if animeEntity.episodeCount is not None else None, )
 		values += (animeEntity.userState.name if animeEntity.userState is not None else None, )
 		values += (animeEntity.animeId if animeEntity.animeId is not None else None, )
+		return values
+	def ParseToTupleForUpdate(self, animeEntity):
+		values = ()
+		values += (animeEntity.episodeCount if animeEntity.episodeCount is not None else None, )
+		values += (animeEntity.userState.name if animeEntity.userState is not None else None, )
+		values += (animeEntity.animeId if animeEntity.animeId is not None else None, )
+		values += (animeEntity.animeName if animeEntity.animeName is not None else None, )
 		return values
 
 	def GetAllKissAnimeEntities(self):

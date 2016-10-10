@@ -23,16 +23,40 @@ def GetGlobalScraper():
 def GetScraper():
 	return cfscrape.create_scraper()
 
-def ScrapeHtml(url, scraper=None):
+def ScrapeHtml(url, scraper=None, timesFailed=0):
 	try:
 		if scraper is None:
-			html = str(GetGlobalScraper().get(url).content)
+			response = GetGlobalScraper().get(url)
 		else:
-			html = str(scraper.get(url).content)			
+			response = scraper.get(url)
 	except Exception as exception:
-		Debug.Log('CFscrape screwed up... \n', traceback.format_exc())
-	html = RemoveHtmlTrash(html)
-	return html
+		if timesFailed > 20:
+			Debug.Log('CFscrape screwed up... \n', traceback.format_exc())
+			return None
+		time.sleep(0.2)			
+		response = ScrapeHtml(url, scraper, timesFailed+1)
+
+	return response
+	# try:
+	# 	if scraper is None:
+	# 		html = str(GetGlobalScraper().get(url).content)
+	# 	else:
+	# 		if crawler:
+	# 			response = scraper.get(url)
+	# 			return response
+	# 		else:
+	# 			html = str(scraper.get(url).content)			
+	# except Exception as exception:
+	# 	if timesFailed > 100:
+	# 		Debug.Log('CFscrape screwed up... \n', traceback.format_exc())
+	# 		return None
+	# 	time.sleep(0.2)
+	# 	if crawler:
+	# 		html = ScrapeHtml(url, scraper, True)
+	# 	html = ScrapeHtml(url, scraper, False)	
+	# 	return html
+	# html = RemoveHtmlTrash(html)
+	# return html
 def RemoveHtmlTrash(html):
 	return html.replace('\r', '').replace('\n', '').replace('\\r', '').replace('\\n', '')
 def GetRequest(url, headers=None):

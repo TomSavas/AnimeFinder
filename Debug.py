@@ -19,12 +19,11 @@ class Debug():
 	@staticmethod
 	def Log(*args):
 		Debug.Print(*args)
-		if Debug.debugEnabled:
-			Debug.OpenLogFile()
-			Debug.logFile.write(str(str(datetime.now()) + '  '))
-			for arg in args:
-				Debug.logFile.write(str(arg))
-			Debug.logFile.write('\n')
+		Debug.OpenLogFile()
+		Debug.logFile.write(str(str(datetime.now()) + '  '))
+		for arg in args:
+			Debug.logFile.write(str(arg))
+		Debug.logFile.write('\n')
 	@staticmethod
 	def Print(*args):
 		if Debug.debugEnabled:
