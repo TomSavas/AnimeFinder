@@ -25,7 +25,7 @@ class KissParser():
 		if crawlerRegexQuery is None:
 			try:
 				regexResult = regex.search(r'\"aAnime\".href(?:[^\>])+>\s*(?P<AnimeName>[^\<]+)', html)
-				animeEntity.animeName = regexResult.group('AnimeName').replace(' (Sub)', '').replace(' (Dub)', '').replace(' (TV)', '')
+				animeEntity.animeName = regexResult.group('AnimeName')#.replace(' (Sub)', '').replace(' (Dub)', '').replace(' (TV)', '')
 			except Exception as exception:
 				Debug.Log('\n', traceback.format_exc(), '\nHtml:\n', html)
 				return AnimeEntity()
@@ -40,13 +40,16 @@ class KissParser():
 		else:
 			try:
 				regexResult = regex.search(crawlerRegexQuery[0], html)
-				animeEntity.animeName = regexResult.group('AnimeName').replace(' (Sub)', '').replace(' (Dub)', '').replace(' (TV)', '')
+				animeEntity.animeName = regexResult.group('AnimeName')#.replace(' (Sub)', '').replace(' (Dub)', '').replace(' (TV)', '')
 			except Exception as exception:
 				Debug.Log('\n', traceback.format_exc(), '\nHtml:\n', html)
 				return AnimeEntity()			
 			
 			animeEntity.userState = UserState.NotDefined
 			searchThread = SearchThread.SearchThread(html, crawlerRegexQuery[1])
+
+		if '(Sub)' in animeEntity.animeName or '(Sub)' in animeEntity.animeName or '(Sub)' in animeEntity.animeName:
+			searchThread.synonyms.append(animeEntity.animeName.replace(' (Sub)', '').replace(' (Dub)', '').replace(' (TV)', '')) 
 
 		self.searchThreads[animeEntity] = searchThread
 		searchThread.start()
@@ -77,14 +80,17 @@ class KissParser():
 
 		Debug.Log('[KissParser] Gathering episodeCount and synonyms...')			
 		for animeEntity in self.animeEntities:
-			animeEntity.episodeCount = self.searchThreads[animeEntity].episodeCount
-			animeEntity.synonyms = self.searchThreads[animeEntity].synonyms
+			searchAnimeEntity = self.searchThreads[animeEntity]
+			animeEntity.episodeCount = searchAnimeEntity.episodeCount
+			animeEntity.synonyms = searchAnimeEntity.synonyms
+			animeEntity.genres = searchAnimeEntity.genres
+			animeEntity.summary = searchAnimeEntity.summary
 
 		Debug.Log('[KissParser] Joining threads..., total thread count = ', len(self.animeEntities))	
 		for animeEntity in self.animeEntities:
 			self.totalEpisodeCount += self.searchThreads[animeEntity].episodeCount
 			self.searchThreads[animeEntity].join(0.5)
-		Debug.Log('[KissParser] Finished joining threads...')	
+		# Debug.Log('[KissParser] Finished joining threads...')	
 
 		if crawlerHtmls is None:
 			Debug.Log('[KissParser] Syncing with database...')
