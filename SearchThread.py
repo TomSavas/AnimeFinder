@@ -7,12 +7,17 @@ class SearchThread(threading.Thread):
 		self.html = html
 		self.episodeCount = 0
 		self.synonyms = []
+		self.genres = []
+		self.summary = ''
 		self.crawlerRegexQuery = crawlerRegexQuery
 
 	def run(self):
+		self.GetAnimeHtml()
 		self.episodeCount = self.GetEpisodeCount()
 		self.synonyms = self.GetAnimeSynonyms()
-		
+		self.genres = self.GetAnimeGenres()
+		self.summary = self.GetAnimeSummary()
+
 	def GetAnimeHtml(self):
 		url = 'http://kissanime.to'
 		try:
@@ -28,16 +33,15 @@ class SearchThread(threading.Thread):
 
 		html = ScrapeHtml(url)
 		html = RemoveHtmlTrash(str(html.content)) if html is not None else ''  
-		return html
+		self.html = html
 
 	def GetEpisodeCount(self):
-		html = self.GetAnimeHtml()
-		if html is None:
+		if self.html is None:
 			self.episodeCount = 0
 			return self.episodeCount
 
 		try:
-			html = regex.split(r'\<table\sclass\=\"listing\"\>', html)
+			html = regex.split(r'\<table\sclass\=\"listing\"\>', self.html)
 			if len(html) <= 1:
 				self.episodeCount = 0
 				return 0
@@ -52,11 +56,9 @@ class SearchThread(threading.Thread):
 
 		return self.episodeCount
 	def GetAnimeSynonyms(self):
-		html = self.GetAnimeHtml()
-
 		synonyms = []
 		try:
-			html = regex.split(r'<p>\s+?<span', html)
+			html = regex.split(r'<p>\s+?<span', self.html)
 			if len(html) < 2:	
 				return synonyms
 			html = html[1] 
@@ -69,3 +71,29 @@ class SearchThread(threading.Thread):
 			if not IsHexInString(synonym):
 				self.synonyms.append(synonym.replace('\\', ''))
 		return self.synonyms
+	def GetAnimeGenres(self):
+		genres = []
+		try:
+			genres = regex.findall(r'\/Genre\/(?P<Genres>[^"]+)', self.html)
+		except Exception as exception:
+			Debug.Log(traceback.format_exc(), self.html)
+		return genres
+	def GetAnimeSummary(self):
+		summary = ''
+		try:
+			regexResult = regex.findall(r'Summary.+?(?:<.+?>)*(.+?)</p>', self.html)
+			if len(regexResult) > 0:
+				regexResult = regexResult[0]
+				regexResult = regex.split(r'<.+?>', regexResult)
+				regexResult = ''.join(regexResult)
+				regexResult = regex.split(r'(\s){3}', regexResult) 
+				regexResult = ''.join(regexResult)
+				regexResult = regex.split(r'(\&nbsp\;)', regexResult) 
+				regexResult = ''.join(regexResult)
+				regexResult = regex.split(r'(\&ldquo\;)', regexResult)
+				regexResult = ''.join(regexResult)
+				regexResult = regex.split(r'(\&rdquo\;)', regexResult) 
+				summary = ''.join(regexResult)
+		except Exception as exception:
+			Debug.Log(traceback.format_exc(), self.html)
+		return summary
