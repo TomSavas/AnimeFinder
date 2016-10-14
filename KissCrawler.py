@@ -2,54 +2,47 @@ from Utils import *
 from KissParser import *
 
 class KissCrawler(threading.Thread):
-	def __init__(self, html=None):#, kissParser=KissParser('https://kissanime.to/MyList/1132864'), html=None):
+	def __init__(self, html=None, crawledPageNumber=None):
 		threading.Thread.__init__(self)
-		# self.kissParser = kissParser if kissParser is not None else KissParser()
 		self.scraper = GetScraper()
 		self.animeEntities = []
 		self.crawlers = []
 		self.kissParsers = []
 		self.html = html
+		self.crawledPageNumber = crawledPageNumber
 
 	def run(self):
-		self.GatherAnime(self.html)
+		self.GatherAnime(self.crawledPageNumber)
 
 	def GatherAnime(self, pageCount):
 		html = self.SplitToListOfHtmls(self.html)
 		crawlerRegexQuery = [r'<a\shref(?:[^\>])+>\s*(?P<AnimeName>[^\<]+)', r'<a\shref="(?P<Link>[^\"]+)']
 
 		kissParser = KissParser('https://kissanime.to/MyList/1132864')
-		kissParser.GetListOfKissAnimeEntities(crawlerHtmls=html, crawlerRegexQuery=crawlerRegexQuery)
 		self.kissParsers.append(kissParser)
-		# self.animeEntities += self.kissParser.animeEntities
-		# self.kissParser.animeEntities = []
+		Debug.Log('[KissCrawler] Trying to connect to ', str('http://kissanime.to/AnimeList?page=' + str(pageCount)))
+		kissParser.GetListOfKissAnimeEntities(crawlerHtmls=html, crawlerRegexQuery=crawlerRegexQuery)
 
 	def CrawlForAnime(self):
 		pageCount = 0
 		while True:
-			# if pageCount == 1:
-				# break;
-
-			Debug.Log('[KissCrawler] Trying to connect to ', str('http://kissanime.to/AnimeList?page=' + str(pageCount)))
-			# print('[KissCrawler] Trying to connect to', str('http://kissanime.to/AnimeList?page=' + str(pageCount)))
 			response = ScrapeHtml(str(str('http://kissanime.to/AnimeList?page=' + str(pageCount))), scraper=self.scraper)
-			if response is not None:
-				# Debug.Log('[KissCrawler] Response code - ', response.status_code, ' contains \'Not found\' - ', str(self.ContainsNotFound(response.text)))
+			if response is not None and len(RemoveHtmlTrash(str(response.content))) > 250:
 				
 				if response.status_code != 200 or self.ContainsNotFound(RemoveHtmlTrash(str(response.content))):
 					self.CleanUp()
 					break;
 			
-				crawler = KissCrawler(html=RemoveHtmlTrash(str(response.content)))
+				crawler = KissCrawler(html=RemoveHtmlTrash(str(response.content)), crawledPageNumber=pageCount)
 				crawler.start()
 				self.crawlers.append(crawler)
 				time.sleep(1)
 			else:
-				Debug.Log('[KissCrawler] Something went wrong url=', str('http://kissanime.to/AnimeList?page=' + str(pageCount)))
+				Debug.Log('[KissCrawler] Something went wrong url=', str('http://kissanime.to/AnimeList?page=' + str(pageCount)), '\nHTML:\n', RemoveHtmlTrash(str(response.content)), '\n')
 				pageCount += 1
 				continue
 
-			if pageCount % 30 == 0:
+			if pageCount % 30 == 0 and pageCount > 0:
 				self.CleanUp()
 			
 			pageCount += 1	
@@ -62,12 +55,7 @@ class KissCrawler(threading.Thread):
 			for crawler in self.crawlers:
 				if crawler.isAlive():
 					areAlive = True
-					time.sleep(2)	
-
-		# for crawler in self.crawlers:
-		# 	for kissParser in crawler.kissParsers:
-		# 		for animeEntity in kissParser.animeEntities:
-		# 			animeEntity.Print()
+					time.sleep(2)
 
 		for crawler in self.crawlers:
 			for kissParser in crawler.kissParsers:
@@ -87,6 +75,3 @@ class KissCrawler(threading.Thread):
 			return True
 		else:
 			return False
-
-
-# total anime count in mal = 10856
