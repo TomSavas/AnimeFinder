@@ -86,7 +86,7 @@ class SearchThread(threading.Thread):
 				regexResult = regexResult[0]
 				regexResult = regex.split(r'<.+?>', regexResult)
 				regexResult = ''.join(regexResult)
-				regexResult = regex.split(r'(\s){3}', regexResult) 
+				regexResult = regex.split(r'(\s){3,}', regexResult) 
 				regexResult = ''.join(regexResult)
 				regexResult = regex.split(r'(\&nbsp\;)', regexResult) 
 				regexResult = ''.join(regexResult)
