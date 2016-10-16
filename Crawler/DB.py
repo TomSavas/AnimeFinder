@@ -16,9 +16,9 @@ class DB():
 		self.cursor.execute('SELECT name FROM sqlite_master WHERE type = "table"')
 		if self.cursor.fetchone() is None:
 			self.cursor.execute("CREATE TABLE KissAnime(AnimeName TEXT PRIMARY KEY, Synonyms TEXT, EpisodeCount INT, UserState TEXT, AnimeID INT, Genres TEXT, Synapse TEXT)")
-			Debug.Log('Database created @ /anime.db')
+			Debug.Log('Database created @ ../anime.db')
 		else:
-			Debug.Log('Loaded existing database from /anime.db')
+			Debug.Log('Loaded existing database from ../anime.db')
 
 	def GetKissAnimeEntityCount(self):
 		self.cursor.execute('SELECT COUNT(*) FROM KissAnime')
