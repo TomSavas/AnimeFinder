@@ -10,7 +10,7 @@ class DB():
 		return DB.db
 
 	def __init__(self):
-		self.db = sqlite3.connect('anime.db')
+		self.db = sqlite3.connect('../anime.db')
 		self.cursor = self.db.cursor()
 
 		self.cursor.execute('SELECT name FROM sqlite_master WHERE type = "table"')
