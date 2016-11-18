@@ -1,4 +1,5 @@
 from Utils import *
+import html
 
 class SearchThread(threading.Thread):
 
@@ -8,15 +9,19 @@ class SearchThread(threading.Thread):
 		self.episodeCount = 0
 		self.synonyms = []
 		self.genres = []
-		self.summary = ''
+		self.synapse = ''
+		self.cover = ''
+		self.episodePageLinks = []
+		self.videoLinks = {}
 		self.crawlerRegexQuery = crawlerRegexQuery
 
 	def run(self):
 		self.GetAnimeHtml()
-		self.episodeCount = self.GetEpisodeCount()
-		self.synonyms = self.GetAnimeSynonyms()
-		self.genres = self.GetAnimeGenres()
-		self.summary = self.GetAnimeSummary()
+		self.GetEpisodeCount()
+		self.GetAnimeSynonyms()
+		self.GetAnimeGenres()
+		self.GetAnimeSynapse()
+		self.GetCoverPicture()
 
 	def GetAnimeHtml(self):
 		url = 'http://kissanime.to'
@@ -38,23 +43,22 @@ class SearchThread(threading.Thread):
 	def GetEpisodeCount(self):
 		if self.html is None:
 			self.episodeCount = 0
-			return self.episodeCount
+			return
 
 		try:
 			html = regex.split(r'\<table\sclass\=\"listing\"\>', self.html)
 			if len(html) <= 1:
 				self.episodeCount = 0
-				return 0
+				return
 
 			html = regex.split(r'\<\/table\>', html[1])[0]
-			regexQuery = '<a\s+?href.*?()'
-			regexResult = regex.findall(regexQuery, html)
+			regexResult = regex.findall(r'<a.+?href="(.+?)"', html)
 			self.episodeCount = len(regexResult)
+			for link in regexResult:
+				self.episodePageLinks.append(str('http://kissanime.to' + link))
 		except Exception as exception:
 			Debug.Log(traceback.format_exc(), html)
 			self.episodeCount = 0
-
-		return self.episodeCount
 	def GetAnimeSynonyms(self):
 		synonyms = []
 		try:
@@ -70,30 +74,34 @@ class SearchThread(threading.Thread):
 		for synonym in synonyms:
 			if not IsHexInString(synonym):
 				self.synonyms.append(synonym.replace('\\', ''))
-		return self.synonyms
 	def GetAnimeGenres(self):
 		genres = []
 		try:
 			genres = regex.findall(r'\/Genre\/(?P<Genres>[^"]+)', self.html)
 		except Exception as exception:
 			Debug.Log(traceback.format_exc(), self.html)
-		return genres
-	def GetAnimeSummary(self):
-		summary = ''
+		self.genres = genres
+	def GetAnimeSynapse(self):
+		synapse = ''
 		try:
 			regexResult = regex.findall(r'Summary.+?(?:<.+?>)*(.+?)</p>', self.html)
 			if len(regexResult) > 0:
 				regexResult = regexResult[0]
 				regexResult = regex.split(r'<.+?>', regexResult)
 				regexResult = ''.join(regexResult)
-				regexResult = regex.split(r'(\s){3,}', regexResult) 
+				regexResult = regex.split(r'(\s){2,}', regexResult) 
 				regexResult = ''.join(regexResult)
-				regexResult = regex.split(r'(\&nbsp\;)', regexResult) 
-				regexResult = ''.join(regexResult)
-				regexResult = regex.split(r'(\&ldquo\;)', regexResult)
-				regexResult = ''.join(regexResult)
-				regexResult = regex.split(r'(\&rdquo\;)', regexResult) 
-				summary = ''.join(regexResult)
+				regexResult = html.unescape(regexResult)
+				synapse = regexResult.replace('\\', '')
 		except Exception as exception:
 			Debug.Log(traceback.format_exc(), self.html)
-		return summary
+		self.synapse = synapse
+	def GetCoverPicture(self):
+		cover = ''
+		try:
+			regexResult = regex.findall(r'Cover.+?src="(.+?)"', self.html)
+			if len(regexResult) > 0:
+				cover = regexResult[0]
+		except Exception as exception:
+			Debug.Log(traceback.format_exc(), self.html)
+		self.cover = cover
