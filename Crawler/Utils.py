@@ -23,18 +23,27 @@ def GetGlobalScraper():
 def GetScraper():
 	return cfscrape.create_scraper()
 
-def ScrapeHtml(url, scraper=None, timesFailed=0):
+def ScrapeHtml(url, scraper=None, timesFailed=0, headers=None):
 	try:
 		if scraper is None:
-			response = GetGlobalScraper().get(url)
+			if headers is not None:
+				response = GetGlobalScraper().get(url, headers=headers)
+			else:
+				response = GetGlobalScraper().get(url)
 		else:
-			response = scraper.get(url)
+			if headers is not None:
+				response = scraper.get(url, headers=headers)
+			else:
+				response = scraper.get(url)				
 	except Exception as exception:
 		if timesFailed > 20:
 			Debug.Log('CFscrape screwed up... \n', traceback.format_exc())
 			return None
 		time.sleep(0.2)			
-		response = ScrapeHtml(url, scraper, timesFailed+1)
+		if headers is not None:
+			response = ScrapeHtml(url, scraper, timesFailed+1, headers=headers)
+		else:
+			response = ScrapeHtml(url, scraper, timesFailed+1)			
 
 	return response
 def RemoveHtmlTrash(html):
