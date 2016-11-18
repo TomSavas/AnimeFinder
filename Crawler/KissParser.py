@@ -7,6 +7,7 @@ class KissParser():
 		self.totalEpisodeCount = 0
 		self.searchThreads = {}
 		self.animeEntities = []
+		self.episodePageLinks = {}
 
 	def GetBookmarkListOfHtmls(self, kissBookmarkUrl=None):
 		kissBookmarkUrl = self.kissBookmarkUrl if kissBookmarkUrl is None else kissBookmarkUrl
@@ -80,11 +81,19 @@ class KissParser():
 
 		Debug.Log('[KissParser] Gathering episodeCount and synonyms...')			
 		for animeEntity in self.animeEntities:
-			searchAnimeEntity = self.searchThreads[animeEntity]
-			animeEntity.episodeCount = searchAnimeEntity.episodeCount
-			animeEntity.synonyms = searchAnimeEntity.synonyms
-			animeEntity.genres = searchAnimeEntity.genres
-			animeEntity.summary = searchAnimeEntity.summary
+			searchThread = self.searchThreads[animeEntity]
+			animeEntity.episodeCount = searchThread.episodeCount
+			animeEntity.synonyms = searchThread.synonyms
+			animeEntity.genres = searchThread.genres
+			animeEntity.synapse = searchThread.synapse
+			animeEntity.cover = searchThread.cover
+			animeEntity.videoLinks = searchThread.videoLinks
+			animeEntity.episodePageLinks = searchThread.episodePageLinks
+
+			if animeEntity.animeName in self.episodePageLinks:
+				self.episodePageLinks[animeEntity.animeName] += searchThread.episodePageLinks
+			else:
+				self.episodePageLinks[animeEntity.animeName] = searchThread.episodePageLinks
 
 		Debug.Log('[KissParser] Joining threads..., total thread count = ', len(self.animeEntities))	
 		for animeEntity in self.animeEntities:
@@ -102,17 +111,20 @@ class KissParser():
 			if animeEntityFromDB is not None:
 				animeEntityFromDB = animeEntityFromDB[0] 
 				if animeEntity.__dict__ != animeEntityFromDB.__dict__:
-					if animeEntity.episodeCount <= animeEntityFromDB.episodeCount or len(animeEntity.synonyms) <= len(animeEntityFromDB.synonyms):
+					if (animeEntity.episodeCount <= animeEntityFromDB.episodeCount or len(animeEntity.synonyms) <= len(animeEntityFromDB.synonyms)) and len(animeEntity.episodePageLinks) <= len(animeEntityFromDB.episodePageLinks):
 						continue
 					if animeEntity.animeName == animeEntityFromDB.animeName:
 						Debug.Log('[KissParser] Found a missmatch animeName = ', animeEntity.animeName, ' updating in DB...\nanimeEntity: ', animeEntity.__dict__, '\nanimeEntityFromDB: ', animeEntityFromDB.__dict__)
-						DB.GetDB().UpdateKissAnimeEntity(animeEntity)
+						if animeEntity.animeName in self.episodePageLinks:
+							DB.GetDB().UpdateKissAnimeEntity(animeEntity, self.episodePageLinks[animeEntity.animeName])
+						else:
+							DB.GetDB().UpdateKissAnimeEntity(animeEntity)
 					else:
 						Debug.Log('[KissParser] Found a missmatch animeName = ', animeEntity.animeName, ' adding to DB...\nanimeEntity: ', animeEntity.__dict__)
-						DB.GetDB().AddKissAnimeEntity(animeEntity)
+						DB.GetDB().AddKissAnimeEntity(animeEntity, self.episodePageLinks[animeEntity.animeName])
 			else:
 				Debug.Log('[KissParser] ', animeEntity.animeName, ' not found in DB, adding to DB...')
-				DB.GetDB().AddKissAnimeEntity(animeEntity)
+				DB.GetDB().AddKissAnimeEntity(animeEntity, self.episodePageLinks[animeEntity.animeName])
 
 	def CountTimeSpent(self):
 		episodeCount = 0
