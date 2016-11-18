@@ -2,7 +2,7 @@ from Debug import *
 from UserState import *
 
 class AnimeEntity:
-	def __init__(self, animeName=None, synonyms=None, episodeCount=None, userState=None, animeId=None, genres=None, synapse=None):
+	def __init__(self, animeName=None, synonyms=None, episodeCount=None, userState=None, animeId=None, genres=None, synapse=None, cover=None, episodePageLinks=[], episodes=[]):
 		self.animeName = animeName	
 		self.synonyms = synonyms
 		self.episodeCount = episodeCount
@@ -10,7 +10,10 @@ class AnimeEntity:
 		self.animeId = animeId
 		self.genres = genres
 		self.synapse = synapse
-		
+		self.cover = cover
+		self.episodePageLinks = episodePageLinks
+		self.episodes = episodes
+
 	def Log(self):
 		animeEntityAsString = ''
 		for var in vars(self).keys():
