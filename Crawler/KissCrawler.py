@@ -9,6 +9,7 @@ class KissCrawler(threading.Thread):
 		self.crawlers = []
 		self.kissParsers = []
 		self.html = html
+		self.episodePageLinks = {}
 		self.crawledPageNumber = crawledPageNumber
 
 	def run(self):
@@ -26,7 +27,10 @@ class KissCrawler(threading.Thread):
 	def CrawlForAnime(self):
 		pageCount = 0
 		while True:
+			# if pageCount == 1:
+			# 	self.CleanUp()
 			response = ScrapeHtml(str(str('http://kissanime.to/AnimeList?page=' + str(pageCount))), scraper=self.scraper)
+
 			if response is not None and len(RemoveHtmlTrash(str(response.content))) > 250:
 				
 				if response.status_code != 200 or self.ContainsNotFound(RemoveHtmlTrash(str(response.content))):
@@ -36,7 +40,7 @@ class KissCrawler(threading.Thread):
 				crawler = KissCrawler(html=RemoveHtmlTrash(str(response.content)), crawledPageNumber=pageCount)
 				crawler.start()
 				self.crawlers.append(crawler)
-				time.sleep(1)
+				time.sleep(1.5)
 			else:
 				Debug.Log('[KissCrawler] Something went wrong url=', str('http://kissanime.to/AnimeList?page=' + str(pageCount)), '\nHTML:\n', RemoveHtmlTrash(str(response.content)), '\n')
 				pageCount += 1
@@ -63,6 +67,8 @@ class KissCrawler(threading.Thread):
 
 		for crawler in self.crawlers:
 			crawler.join(0.5)		
+
+		self.crawlers = []
 
 	def SplitToListOfHtmls(self, html):
 		listOfHtmls = regex.split(r'(?:<tr>.+?<td)|(?:<tr\sclass=\"odd\")()', html)
