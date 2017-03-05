@@ -19,9 +19,9 @@ class KissCrawler(threading.Thread):
 		html = self.SplitToListOfHtmls(self.html)
 		crawlerRegexQuery = [r'<a\shref(?:[^\>])+>\s*(?P<AnimeName>[^\<]+)', r'<a\shref="(?P<Link>[^\"]+)']
 
-		kissParser = KissParser('https://kissanime.to/MyList/1132864')
+		kissParser = KissParser('https://kissanime.ru/MyList/1132864')
 		self.kissParsers.append(kissParser)
-		Debug.Log('[KissCrawler] Trying to connect to ', str('http://kissanime.to/AnimeList?page=' + str(pageCount)))
+		Debug.Log('[KissCrawler] Trying to connect to ', str('http://kissanime.ru/AnimeList?page=' + str(pageCount)))
 		kissParser.GetListOfKissAnimeEntities(crawlerHtmls=html, crawlerRegexQuery=crawlerRegexQuery)
 
 	def CrawlForAnime(self):
@@ -29,7 +29,7 @@ class KissCrawler(threading.Thread):
 		while True:
 			# if pageCount == 1:
 			# 	self.CleanUp()
-			response = ScrapeHtml(str(str('http://kissanime.to/AnimeList?page=' + str(pageCount))), scraper=self.scraper)
+			response = ScrapeHtml(str(str('http://kissanime.ru/AnimeList?page=' + str(pageCount))), scraper=self.scraper)
 
 			if response is not None and len(RemoveHtmlTrash(str(response.content))) > 250:
 				
@@ -42,7 +42,7 @@ class KissCrawler(threading.Thread):
 				self.crawlers.append(crawler)
 				time.sleep(1.5)
 			else:
-				Debug.Log('[KissCrawler] Something went wrong url=', str('http://kissanime.to/AnimeList?page=' + str(pageCount)), '\nHTML:\n', RemoveHtmlTrash(str(response.content)), '\n')
+				Debug.Log('[KissCrawler] Something went wrong url=', str('http://kissanime.ru/AnimeList?page=' + str(pageCount)), '\nHTML:\n', RemoveHtmlTrash(str(response.content)), '\n')
 				pageCount += 1
 				continue
 

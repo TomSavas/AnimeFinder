@@ -24,7 +24,7 @@ class SearchThread(threading.Thread):
 		self.GetCoverPicture()
 
 	def GetAnimeHtml(self):
-		url = 'http://kissanime.to'
+		url = 'http://kissanime.ru'
 		try:
 			if self.crawlerRegexQuery is None:
 				regexResult = regex.search(r'"aAnime"\shref="(?P<Link>/Anime/[^"]+)\"\>(?P<AnimeName>[^<]+)', self.html)
@@ -55,7 +55,7 @@ class SearchThread(threading.Thread):
 			regexResult = regex.findall(r'<a.+?href="(.+?)"', html)
 			self.episodeCount = len(regexResult)
 			for link in regexResult:
-				self.episodePageLinks.append(str('http://kissanime.to' + link))
+				self.episodePageLinks.append(str('http://kissanime.ru' + link))
 		except Exception as exception:
 			Debug.Log(traceback.format_exc(), html)
 			self.episodeCount = 0

@@ -3,15 +3,15 @@ import cfscrape
 
 class VideoScraper():
 	loginHeaders = {
-	    'host': "kissanime.to",
+	    'host': "kissanime.ru",
 	    'connection': "keep-alive",
 	    'cache-control': "no-cache",
-	    'origin': "http://kissanime.to",
+	    'origin': "http://kissanime.ru",
 	    'upgrade-insecure-requests': "1",
 	    'user-agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/52.0.2743.116 Chrome/52.0.2743.116 Safari/537.36",
 	    'content-type': "application/x-www-form-urlencoded",
 	    'accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-	    'referer': "http://kissanime.to/Login",
+	    'referer': "http://kissanime.ru/Login",
 	}
 	loginHeadersInitialized = False
 	scraper = None
@@ -40,7 +40,7 @@ class VideoScraper():
 			VideoScraper.loginHeadersInitialized = False
 
 		if not VideoScraper.loginHeadersInitialized:
-			initialres = scraper.get(url='http://kissanime.to')
+			initialres = scraper.get(url='http://kissanime.ru')
 
 			cfuid = regex.split(r';', initialres[0].headers['Set-Cookie'])[0]
 			cfclearance = regex.split(r';', initialres[1].history[0].headers['Set-Cookie'])[0]
@@ -66,7 +66,7 @@ class VideoScraper():
 	def Login(scraper, username, password):
 		loginData = str('username=' + username + '&password=' + password + '&redirect=')
 		
-		response = scraper.request("POST", url='http://kissanime.to/Login', data=loginData, headers=VideoScraper.loginHeaders)
+		response = scraper.request("POST", url='http://kissanime.ru/Login', data=loginData, headers=VideoScraper.loginHeaders)
 		if type(response) is tuple:
 			html = RemoveHtmlTrash(str(response[1].content))
 		else:
